@@ -1,0 +1,305 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+setwd("/Users/yikeshen")
+
+library(tidyr)
+library(tidyverse)
+library(dplyr)
+library(readxl)
+library(ggplot2)
+library("ggsci")
+library(dplyr)
+library(ggpubr)
+```
+
+
+
+```{r}
+AntibioticsSummary <- read.csv(file="Antibiotics_Calculated_Summary.csv", sep="\t")
+colnames(AntibioticsSummary)
+
+AVEanti <- AntibioticsSummary[,3:6] %>% t()
+
+Average_df<-data.frame(matrix(0,nrow=4,ncol=36))
+std_df<-data.frame(matrix(0,nrow=4,ncol=36))
+
+for (i in 1:4){
+  for (j in 1:((108)/3)){
+    Process_vector<-as.numeric(unlist(AVEanti[i, c(j*3-2,j*3-1,j*3)]))
+    
+    if (sum(is.na.data.frame(Process_vector)) ==3){
+      Average_df[i,j] = NA
+      std_df[i,j] = NA      
+    }
+    else{
+      average <- mean(na.omit(Process_vector))
+      std_val <- sd(na.omit(Process_vector))
+      Average_df[i,j] = average
+      std_df[i,j] = std_val      
+    }
+  }
+}
+
+```
+
+```{r}
+Massrecovery <- read.csv(file="TOTALMASSAVEframe.csv", sep="\t")
+Massrecovery <- Massrecovery %>% gather(2:5,key="Compartment",value="RelativePercentage")
+library(scales)
+Massrecoveryfig<- ggplot()+ theme_bw()+
+  geom_bar(aes(x=Antibiotics, y= RelativePercentage, fill=Compartment), data = Massrecovery,stat="identity") +
+  labs(x="Antibiotics", y="Recovered Percentage (%)") +
+  scale_y_continuous(labels = dollar_format(suffix = "", prefix = "")) +
+  ggtitle("Antibiotics Recovery (Averaged)") +
+  theme(legend.position="top",axis.text=element_text(size=16),
+        axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),
+        axis.text.x = element_text(angle = 30))#+
+  #facet_wrap(~Antibioticsnamestringrep,1,scales = "free_x")+scale_fill_d3()
+Massrecoveryfig
+
+
+```
+
+```{r}
+#Antibioticsname <- c("Sulfamethoxazole","Sulfamethoxazole","Sulfamethoxazole","Sulfamethoxazole","Trimethoprim","Trimethoprim","Trimethoprim","Trimethoprim","Trimethoprim","Lincomycin","Lincomycin","Lincomycin","Lincomycin","Oxytetracycline","Oxytetracycline","Oxytetracycline","Oxytetracycline","Monensin Sodium","Monensin Sodium","Monensin Sodium","Monensin Sodium","Tylosin","Tylosin","Tylosin","Tylosin","Ciprofloxacin","Ciprofloxacin","Ciprofloxacin","Ciprofloxacin","Cefalexin","Cefalexin","Cefalexin","Cefalexin","Tetracycline","Tetracycline","Tetracycline","Tetracycline")
+
+#Average_df <- rbind(Average_df,Antibioticsname)
+
+colnames(Average_df) <- c("Day 25-SUL","Day 27-SUL","Day 31-SUL","Day 35-SUL","Day 25-TRI","Day 27-TRI","Day 31-TRI","Day 35-TRI","Day 25-LIN","Day 27-LIN","Day 31-LIN","Day 35-LIN","Day 25-OXY","Day 27-OXY","Day 31-OXY","Day 35-OXY","Day 25-MON","Day 27-MON","Day 31-MON","Day 35-MON","Day 25-TYL","Day 27-TYL","Day 31-TYL","Day 35-TYL","Day 25-CIP","Day 27-CIP","Day 31-CIP","Day 35-CIP","Day 25-CEF","Day 27-CEF","Day 31-CEF","Day 35-CEF","Day 25-TET","Day 27-TET","Day 31-TET","Day 35-TET")
+rownames(Average_df) <- c("ShootsMass.","RootsMass.","SoilMass.","RhizosphereMass.") #,"Antibioticsname")
+
+#SUL <- Average_df[,1:4]
+SUL <- add_column(Average_df, part = c("ShootsMass.","RootsMass.","SoilMass.","RhizosphereMass."), .after = 36)
+#Stackanti <- SUL %>% select("ShootsMass.","RootsMass.","SoilMass.","RhizosphereMass.","Harvest_date")
+Stackanti <- SUL %>% gather(1:36,key="Harvest_date",value="RelativeAbundance")
+
+Antibioticsnamestringrep <- c(rep("Sulfamethoxazole",16),rep("Trimethoprim",16), rep("Lincomycin",16),rep("Oxytetracycline",16),rep("Monensin Sodium",16),rep("Tylosin",16),rep("Ciprofloxacin",16),rep("Cefalexin",16),rep("Tetracycline",16))
+Stackanti$Antibioticsnamestringrep <- Antibioticsnamestringrep
+
+#Antibioticsname <- c("Sulfamethoxazole","Trimethoprim","Lincomycin","Oxytetracycline","Monensin Sodium","Tylosin","Ciprofloxacin","Cefalexin","Tetracycline")
+
+```
+
+```{r}
+library(scales)
+Antibioticsrecovery<- ggplot()+ theme_bw()+
+  geom_bar(aes(x=Harvest_date, y= RelativeAbundance, fill=part), data = Stackanti,stat="identity") +
+  labs(x="Harvest Date", y="Percentage (%)") +
+  scale_y_continuous(labels = dollar_format(suffix = "", prefix = "")) +
+  ggtitle("Antibiotics Recovery") +
+  theme(legend.position="top",axis.text=element_text(size=16),
+        axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),
+        axis.text.x = element_text(angle = 90))+
+  facet_wrap(~Antibioticsnamestringrep,1,scales = "free_x")+scale_fill_d3()
+Antibioticsrecovery
+
+```
+
+
+```{r}
+Datenamestringrep <- c(rep("Day 25",4),rep("Day 27",4), rep("Day 31",4),rep("Day 35",4))
+Datenamestringrep <- c(rep(Datenamestringrep,9))
+Stackanti$Datenamestringrep <- Datenamestringrep
+colnames(Stackanti)[1] <- "Compartment"
+Antibioticsrecovery2<- ggplot()+ theme_bw()+
+  geom_bar(aes(x=Harvest_date, y= RelativeAbundance, fill=Compartment), data = Stackanti,stat="identity") +
+  labs(x="Harvest Day", y="Percentage (%)") +
+  scale_y_continuous(labels = dollar_format(suffix = "", prefix = "")) +
+  ggtitle("Antibiotics Recovery") +
+  theme(legend.position="top",axis.text=element_text(size=16),
+        axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),
+        axis.text.x = element_text(angle = 90))+
+  facet_wrap(~Datenamestringrep,1,scales = "free_x")+scale_fill_d3()
+Antibioticsrecovery2
+```
+
+
+
+```{r}
+#install.packages("ggpubr")
+library(ggpubr)
+
+shootscon <- AntibioticsSummary %>% dplyr::select("Shoots_Concentration.ug.kg.","Harvest_date", "name")
+#install.packages(naniar)
+#library(naniar)
+#shootscon <- shootscon %>% replace_with_na_all(condition=~.x==86.0870847)
+#shootscon[101,1] <- NA #One tetracycline too high, 86, removed in python
+#shootscon[16,1] <- NA #One trimethoprim too high, 51
+#shootscon <- na_if(shootscon, "86.*")
+
+shootsconfig <- ggplot(data=shootscon,aes(x=Harvest_date, y=Shoots_Concentration.ug.kg.))+ theme_bw()+geom_boxplot()+facet_wrap(~name)+stat_compare_means(label.y = 15,fontface="italic")+ labs(x="Harvest Day", y=expression("Antibiotics Concentration"~(mu*g/kg))) + ggtitle("Antibiotics Concentration in Lettuce Shoots") +theme(legend.position="top",axis.text=element_text(size=16),axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),axis.text.x = element_text(angle = 0))
+#+scale_fill_brewer(palette="Dark2")
+shootsconfig
+```
+
+```{r}
+rootscon <- AntibioticsSummary %>% select("Roots_Concentration.ug.kg.","Harvest_date", "name")
+
+
+rootsconfig <- ggplot(data=rootscon,aes(x=Harvest_date, y=Roots_Concentration.ug.kg.))+ theme_bw()+geom_boxplot()+facet_wrap(~name,scales= "free")+stat_compare_means(fontface="italic")+ labs(x="Harvest Day", y=expression("Antibiotics Concentration"~(mu*g/kg))) + ggtitle("Antibiotics Concentration in Lettuce Roots") +theme(legend.position="top",axis.text=element_text(size=16),axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),axis.text.x = element_text(angle = 0))
+#+scale_fill_brewer(palette="Dark2")
+rootsconfig
+
+```
+
+```{r}
+rhizocon <- AntibioticsSummary %>% select("Rhizosphere_Concentration.ug.kg.","Harvest_date", "name")
+
+#fill=Harvest_date
+rhizoconfig <- ggplot(data=rhizocon,aes(x=Harvest_date, y=Rhizosphere_Concentration.ug.kg.))+ theme_bw()+geom_boxplot()+facet_wrap(~name)+stat_compare_means(fontface="italic")+ labs(x="Harvest Day", y=expression("Antibiotics Concentration"~(mu*g/kg))) + ggtitle("Antibiotics Concentration in Rhizosphere Soil") +theme(legend.position="top",axis.text=element_text(size=16),axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),axis.text.x = element_text(angle = 0))
+#+scale_fill_brewer(palette="Dark2")
+rhizoconfig
+
+
+```
+
+```{r}
+soilcon <- AntibioticsSummary %>% select("Soil_Concentration.ug.kg.","Harvest_date", "name")
+
+
+soilconfig <- ggplot(data=soilcon,aes(x=Harvest_date, y=Soil_Concentration.ug.kg.))+ theme_bw()+geom_boxplot()+facet_wrap(~name,scales= "free")+stat_compare_means(fontface="italic")+ labs(x="Harvest Day", y=expression("Antibiotics Concentration"~(mu*g/kg))) + ggtitle("Antibiotics Concentration in Bulk Soil") +theme(legend.position="top",axis.text=element_text(size=16),axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),axis.text.x = element_text(angle = 0))
+#+scale_fill_brewer(palette="Dark2")
+soilconfig
+
+```
+
+
+
+```{r}
+totalmass <- AntibioticsSummary %>% select("Total_Mass.ug.","Harvest_date", "name") %>% 
+  dplyr::rename(len=Total_Mass.ug.)
+
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE))
+  }
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
+
+df2 <- data_summary(totalmass, varname="len", 
+                    groupnames=c("Harvest_date", "name"))
+
+
+#totalmass$Total_Mass.ug. <- as.numeric(totalmass$Total_Mass.ug.)
+
+totalmassfig <- ggplot(data=df2,aes(x=Harvest_date, y=len,fill=Harvest_date))+ theme_bw()+geom_point(aes(shape=Harvest_date, color=Harvest_date, size=Harvest_date))+
+  facet_wrap(~name)+ geom_errorbar(aes(ymin=len-sd, ymax=len+sd),width=.2,
+                 position=position_dodge(.9))+labs(x="Harvest Date",y="Antibiotics Total Mass" ~(mu*g)) + ggtitle("Antibiotic Total Mass in Irrigation Water") +theme(legend.position="top",axis.text=element_text(size=16),axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),axis.text.x = element_text(angle = 0))
+
+totalmassfig
+```
+
+
+```{r}
+# totalmassfig <- ggplot(data=df2,aes(x=Harvest_date, y=len,fill=Harvest_date))+ theme_bw()+geom_point(aes(shape=Harvest_date, color=Harvest_date, size=Harvest_date))+
+#   facet_wrap(~name,)+stat_compare_means(label.y = 10)+ geom_pointrange(aes(ymin=len-sd, ymax=len+sd))+labs(x="Harvest Date",y="Antibiotics Total Mass" ~(mu*g)) + ggtitle("Antibiotics Total Mass in Irrigation Water") +theme(legend.position="top",axis.text=element_text(size=16),axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),axis.text.x = element_text(angle = 0))
+
+
+```
+
+```{r}
+RCFrhizo <- AntibioticsSummary %>% select("RCFrhizo","Harvest_date", "name")
+#RCFrhizo[101,1] <- NA #one tetracycline concentration too high, removed
+#rownames(RCFrhizo1) <- RCFrhizo1$name
+#RCFrhizotable <- RCFrhizo1 %>% spread(Harvest_date, RCFrhizo)
+
+RCFrhizofig <- ggplot(data=RCFrhizo,aes(x=Harvest_date, y=RCFrhizo,fill=Harvest_date))+ theme_bw()+geom_point(aes(shape=Harvest_date, color=Harvest_date, size=Harvest_date))+facet_wrap(~name,scales= "free")+stat_compare_means(fontface="italic")+ labs(x="Harvest Date", y="Root Concentration Factor") + ggtitle("Rhizosphere based Root Concentration Factor") +theme(legend.position="top",axis.text=element_text(size=16),axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),axis.text.x = element_text(angle = 0))
+
+RCFrhizofig
+
+```
+
+```{r}
+RCFrhizperror <- AntibioticsSummary %>% select("RCFrhizo","Harvest_date", "name")
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE))
+  }
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
+
+rcfrhizoerror <- data_summary(RCFrhizperror, varname="RCFrhizo", 
+                    groupnames=c("Harvest_date", "name"))
+
+
+RCFrhizofigerror <- ggplot(data=rcfrhizoerror,aes(x=Harvest_date, y=RCFrhizo,fill=Harvest_date))+ theme_bw()+geom_point(aes(shape=Harvest_date, color=Harvest_date, size=Harvest_date))+geom_errorbar(aes(ymin=RCFrhizo-sd, ymax=RCFrhizo+sd),width=.2,position=position_dodge(.9)) + facet_wrap(~name,scales= "free")+labs(x="Harvest Date", y="Root Concentration Factor") + ggtitle("Rhizosphere based Root Concentration Factor") +theme(legend.position="top",axis.text=element_text(size=16),axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),axis.text.x = element_text(angle = 0))
+
+RCFrhizofigerror
+
+```
+
+
+```{r}
+RCFbulk <- AntibioticsSummary %>% select("RCFbulk","Harvest_date", "name")
+#RCFbulk[101,1] <- NA
+
+RCFbulk
+
+RCFbulkfig <- ggplot(data=RCFbulk,aes(x=Harvest_date, y=RCFbulk,fill=Harvest_date))+ theme_bw()+geom_point(aes(shape=Harvest_date, color=Harvest_date, size=Harvest_date))+facet_wrap(~name,scales= "free")+stat_compare_means(fontface="italic")+ labs(x="Harvest Date", y="Root Concentration Factor") + ggtitle("Bulksoil based Root Concentration Factor (Bulksoil Based)") +theme(legend.position="top",axis.text=element_text(size=16),axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),axis.text.x = element_text(angle = 0))
+
+RCFbulkfig
+
+```
+
+```{r}
+RCFbulkerror <- AntibioticsSummary %>% select("RCFbulk","Harvest_date", "name")
+
+
+rcfbulkerror <- data_summary(RCFbulkerror, varname="RCFbulk", 
+                    groupnames=c("Harvest_date", "name"))
+
+
+RCFbulkfigerror <- ggplot(data=rcfbulkerror,aes(x=Harvest_date, y=RCFbulk,fill=Harvest_date))+ theme_bw()+geom_point(aes(shape=Harvest_date, color=Harvest_date, size=Harvest_date))+geom_errorbar(aes(ymin=RCFbulk-sd, ymax=RCFbulk+sd),width=.2,position=position_dodge(.9)) + facet_wrap(~name,scales= "free")+labs(x="Harvest Date", y="Root Concentration Factor") + ggtitle("Bulksoil based Root Concentration Factor") +theme(legend.position="top",axis.text=element_text(size=16),axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),axis.text.x = element_text(angle = 0))
+
+RCFbulkfigerror
+```
+
+
+
+
+```{r}
+TF <- AntibioticsSummary %>% select("TF","Harvest_date", "name")
+
+
+TFfig <- ggplot(data=TF,aes(x=Harvest_date, y=TF,fill=Harvest_date))+ theme_bw()+geom_point(aes(shape=Harvest_date, color=Harvest_date, size=Harvest_date))+facet_wrap(~name)+stat_compare_means(fontface="italic")+ labs(x="Harvest Date", y="Translocation Factor") + ggtitle("Translocation Factor") +theme(legend.position="top",axis.text=element_text(size=16),axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),axis.text.x = element_text(angle = 0))
+
+TFfig
+```
+
+```{r}
+TFerror <- AntibioticsSummary %>% select("TF","Harvest_date", "name")
+
+
+TFerror <- data_summary(TFerror, varname="TF", 
+                    groupnames=c("Harvest_date", "name"))
+
+
+TFerrorfig <- ggplot(data=TFerror,aes(x=Harvest_date, y=TF,fill=Harvest_date))+ theme_bw()+geom_point(aes(shape=Harvest_date, color=Harvest_date, size=Harvest_date))+geom_errorbar(aes(ymin=TF-sd, ymax=TF+sd),width=.2,position=position_dodge(.9)) + facet_wrap(~name,scales= "free")+labs(x="Harvest Date", y="Translocation Factor") + ggtitle("Translocation Factor") +theme(legend.position="top",axis.text=element_text(size=16),axis.title=element_text(size=16),plot.title = element_text(size=22, hjust=0.5),text = element_text(size = 16),axis.text.x = element_text(angle = 0))
+
+TFerrorfig
+
+```
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
