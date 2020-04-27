@@ -2,6 +2,14 @@ Shen et al., 2020.
 Rhizosphere Soil is Key to the Uptake of Antibiotics by Lettuce (Lactuca Sativa)
 Submitted to Chemosphere: 04/17/2020
 Under Review: 04/22/2020
+
+Disclaimer: 
+- I support reproducible and efficient data processing pipelines. Even for very simple antibiotics calculation here :)
+- This calculation can also be performed at excel and other softwares.
+- Using my python work flow, you don't need to drag excel sheets, the whole calculation only took 1 minute! If you want to modify some calculation, simply change them in the ".ipynb" workflow, rerun the script, 1 minute, done!
+- If you are not comfortable with looping over multiple antibiotics/chemicals here, take out the loop, the main chunck works for individual chemicals. 
+
+
 Files: 
 1.Input excel data sheets (.xlsx) including calculated LC-MS/MS antibiotics concentration from matrix matched standard curve for step2 calculation
 
