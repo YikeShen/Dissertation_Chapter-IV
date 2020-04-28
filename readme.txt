@@ -1,5 +1,5 @@
 Shen et al., 2020. 
-Rhizosphere Soil is Key to the Uptake of Antibiotics by Lettuce (Lactuca Sativa)
+Rhizosphere Soil is Key to the Uptake of Antibiotics by Lettuce (Lactuca sativa)
 Submitted to Chemosphere: 04/17/2020
 Under Review: 04/22/2020
 
