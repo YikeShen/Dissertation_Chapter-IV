@@ -2,6 +2,8 @@ Shen et al., 2020.
 Rhizosphere Soil is Key to the Uptake of Antibiotics by Lettuce (Lactuca sativa)
 DOI: https://doi.org/10.1016/j.chemosphere.2020.127677
 
+Please email me at "ys3419@columbia.edu" if you have questions with regard to this publication
+
 Disclaimer: 
 - I support reproducible and efficient data processing pipelines. Even for very simple antibiotics calculation here :)
 - This calculation can also be performed at excel and other softwares.
