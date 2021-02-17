@@ -6,7 +6,7 @@ xaxisall <- c("Sulfamethoxazole","Trimethoprim","Lincomycin","Oxytetracycline","
 yall <- cbind(meanaccuracy,meanstd)
 mydataframeall <- data.frame(A = xaxisall,B=group, yall, stringsAsFactors = FALSE)
 colnames(mydataframeall) <- c("Antibiotics", "Compartment", "ave", "std")
-#mydataframeall$labels <- factor(x = mydataframeall$labels,levels = c("USDA","NoAnti","NoMedAnti","NoHormone","Local","FreeRange","Brand","NoBrand"))
+
 
 pd <- position_dodge(0.5) # move them .05 to the left and right
 ggplot(mydataframeall,aes(x=Antibiotics,y=ave,group=Compartment,color=Compartment))+
